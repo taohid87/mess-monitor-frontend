@@ -44,4 +44,10 @@ export interface Statistics {
   totalFines: number;
   totalIncome: number;
   totalExpense: number;
+  newBordersThisMonth: number;
+  pendingFeedbacks: number;
+  activeAnnouncements: number;
+  unreadNotifications: number;
 }
+
+export * from './notifications';

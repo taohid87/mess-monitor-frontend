@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, DollarSign, AlertTriangle, Receipt } from 'lucide-react';
+import { Users, DollarSign, AlertTriangle, Receipt, UserPlus, MessageSquare, Megaphone, Bell } from 'lucide-react';
 import { Statistics } from '@/types';
 
 interface StatsCardsProps {
@@ -31,6 +31,30 @@ export const StatsCards = ({ stats }: StatsCardsProps) => {
       value: `৳ ${stats.totalFines.toLocaleString()}`,
       icon: Receipt,
       color: 'bg-red-100 text-red-500',
+    },
+    {
+      title: 'New This Month',
+      value: stats.newBordersThisMonth.toString(),
+      icon: UserPlus,
+      color: 'bg-purple-100 text-purple-600',
+    },
+    {
+      title: 'Pending Feedbacks',
+      value: stats.pendingFeedbacks.toString(),
+      icon: MessageSquare,
+      color: 'bg-yellow-100 text-yellow-600',
+    },
+    {
+      title: 'Active Announcements',
+      value: stats.activeAnnouncements.toString(),
+      icon: Megaphone,
+      color: 'bg-indigo-100 text-indigo-600',
+    },
+    {
+      title: 'Notifications',
+      value: stats.unreadNotifications.toString(),
+      icon: Bell,
+      color: 'bg-pink-100 text-pink-600',
     },
   ];
 

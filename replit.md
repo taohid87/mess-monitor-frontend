@@ -120,3 +120,47 @@ Preferred communication style: Simple, everyday language.
 4. **Type Safety**: Full TypeScript implementation with shared schemas ensures code reliability
 5. **Component Architecture**: Modular UI components with shadcn/ui for consistency and maintainability
 6. **Database Strategy**: Drizzle ORM with PostgreSQL for complex queries while maintaining Firestore for user data
+
+## Recent Updates (January 18, 2025)
+
+### Issues Fixed
+- ✓ Fixed registration error by updating user profile creation to handle partial data
+- ✓ Enabled borders to edit their own profiles (previously admin-only)
+
+### New Features Added
+1. **Statistics Dashboard**: Enhanced admin dashboard with comprehensive statistics
+   - New borders this month
+   - Pending feedbacks count
+   - Active announcements
+   - Notification counts
+
+2. **Announcement System**:
+   - Admin can create announcements with priority levels (low/medium/high)
+   - Automatic notification generation for all borders
+   - Real-time announcement management
+   - Announcement deletion and editing capabilities
+
+3. **Notification System**:
+   - Real-time notifications for borders
+   - Bell icon with unread count in navbar
+   - Mark individual or all notifications as read
+   - Auto-generated notifications from announcements
+
+4. **Feedback System**:
+   - Borders can submit feedback with ratings (1-5 stars)
+   - Categorized feedback (food, service, management, facilities, other)
+   - Admin can view, respond to, and resolve feedback
+   - Status tracking (pending, reviewed, resolved)
+
+5. **Enhanced User Interface**:
+   - New tabs in admin dashboard for announcements and feedbacks
+   - Notification panel for borders
+   - Feedback modal for border submission
+   - View feedback modal for admin responses
+
+### Technical Implementation
+- Added new Firestore collections: announcements, notifications, feedbacks
+- Created comprehensive type definitions for new features
+- Implemented real-time listeners for live updates
+- Added new UI components with proper error handling
+- Enhanced navbar with notification and feedback buttons for borders

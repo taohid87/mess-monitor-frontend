@@ -1,17 +1,32 @@
+import { useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
-import { User } from '@/types';
+import { User, Notification } from '@/types';
 import { logout } from '@/services/auth';
 import { Button } from '@/components/ui/button';
-import { LogOut, Utensils } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { LogOut, Utensils, Bell, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { listenToNotifications } from '@/services/firestore';
 
 interface NavbarProps {
   user: FirebaseUser | null;
   userProfile: User | null;
+  onShowNotifications?: () => void;
+  onShowFeedback?: () => void;
 }
 
-export const Navbar = ({ user, userProfile }: NavbarProps) => {
+export const Navbar = ({ user, userProfile, onShowNotifications, onShowFeedback }: NavbarProps) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (userProfile?.role === 'border') {
+      const unsubscribe = listenToNotifications(userProfile.uid, (notificationsData) => {
+        setNotifications(notificationsData);
+      });
+      return () => unsubscribe();
+    }
+  }, [userProfile]);
 
   const handleLogout = async () => {
     try {
@@ -31,6 +46,8 @@ export const Navbar = ({ user, userProfile }: NavbarProps) => {
 
   if (!user || !userProfile) return null;
 
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,6 +62,40 @@ export const Navbar = ({ user, userProfile }: NavbarProps) => {
             <span className="text-gray-600">
               Welcome, {userProfile.role === 'admin' ? 'Admin' : userProfile.name}
             </span>
+            
+            {/* Border-specific actions */}
+            {userProfile.role === 'border' && (
+              <>
+                {/* Notifications Button */}
+                <div className="relative">
+                  <Button
+                    onClick={onShowNotifications}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-600 hover:text-primary"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </div>
+                
+                {/* Feedback Button */}
+                <Button
+                  onClick={onShowFeedback}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-600 hover:text-secondary"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Feedback
+                </Button>
+              </>
+            )}
+            
             <Button onClick={handleLogout} variant="destructive" size="sm">
               <LogOut className="mr-2 h-4 w-4" />
               Logout

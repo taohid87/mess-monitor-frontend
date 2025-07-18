@@ -5,9 +5,13 @@ import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
 import { BorderProfile } from '@/components/profile/BorderProfile';
 import { PrintableReceipt } from '@/components/profile/PrintableReceipt';
 import { FundModal } from '@/components/modals/FundModal';
+import { AnnouncementModal } from '@/components/modals/AnnouncementModal';
+import { FeedbackModal } from '@/components/modals/FeedbackModal';
+import { ViewFeedbackModal } from '@/components/modals/ViewFeedbackModal';
+import { NotificationPanel } from '@/components/notifications/NotificationPanel';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/hooks/useAuth';
-import { User, FundTransaction } from '@/types';
+import { User, FundTransaction, Announcement, Feedback } from '@/types';
 
 export default function Home() {
   const { user, userProfile, loading } = useAuth();
@@ -17,6 +21,11 @@ export default function Home() {
   const [printBorder, setPrintBorder] = useState<User | null>(null);
   const [showFundModal, setShowFundModal] = useState(false);
   const [editTransaction, setEditTransaction] = useState<FundTransaction | null>(null);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [editAnnouncement, setEditAnnouncement] = useState<Announcement | null>(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [viewFeedback, setViewFeedback] = useState<Feedback | null>(null);
 
   const handleViewProfile = (border: User) => {
     setSelectedBorder(border);
@@ -40,6 +49,45 @@ export default function Home() {
   const handleCloseFundModal = () => {
     setShowFundModal(false);
     setEditTransaction(null);
+  };
+
+  const handleAddAnnouncement = () => {
+    setEditAnnouncement(null);
+    setShowAnnouncementModal(true);
+  };
+
+  const handleEditAnnouncement = (announcement: Announcement) => {
+    setEditAnnouncement(announcement);
+    setShowAnnouncementModal(true);
+  };
+
+  const handleCloseAnnouncementModal = () => {
+    setShowAnnouncementModal(false);
+    setEditAnnouncement(null);
+  };
+
+  const handleShowFeedback = () => {
+    setShowFeedbackModal(true);
+  };
+
+  const handleCloseFeedbackModal = () => {
+    setShowFeedbackModal(false);
+  };
+
+  const handleShowNotifications = () => {
+    setShowNotifications(true);
+  };
+
+  const handleCloseNotifications = () => {
+    setShowNotifications(false);
+  };
+
+  const handleViewFeedback = (feedback: Feedback) => {
+    setViewFeedback(feedback);
+  };
+
+  const handleCloseViewFeedback = () => {
+    setViewFeedback(null);
   };
 
   if (loading) {
@@ -68,7 +116,12 @@ export default function Home() {
   // Authenticated - show appropriate interface
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar user={user} userProfile={userProfile} />
+      <Navbar 
+        user={user} 
+        userProfile={userProfile}
+        onShowNotifications={handleShowNotifications}
+        onShowFeedback={handleShowFeedback}
+      />
       
       {/* Show border profile if selected, otherwise show appropriate dashboard */}
       {selectedBorder ? (
@@ -93,6 +146,9 @@ export default function Home() {
           onViewProfile={handleViewProfile}
           onAddTransaction={handleAddTransaction}
           onEditTransaction={handleEditTransaction}
+          onAddAnnouncement={handleAddAnnouncement}
+          onEditAnnouncement={handleEditAnnouncement}
+          onViewFeedback={handleViewFeedback}
         />
       ) : (
         <BorderProfile 
@@ -118,6 +174,44 @@ export default function Home() {
         onClose={handleCloseFundModal}
         transaction={editTransaction}
       />
+
+      {/* Announcement Modal for Admin */}
+      {userProfile.role === 'admin' && (
+        <AnnouncementModal
+          isOpen={showAnnouncementModal}
+          onClose={handleCloseAnnouncementModal}
+          createdBy={userProfile.uid}
+          createdByName={userProfile.name}
+        />
+      )}
+
+      {/* Feedback Modal for Borders */}
+      {userProfile.role === 'border' && (
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={handleCloseFeedbackModal}
+          borderUid={userProfile.uid}
+          borderName={userProfile.name}
+        />
+      )}
+
+      {/* Notification Panel for Borders */}
+      {userProfile.role === 'border' && (
+        <NotificationPanel
+          borderUid={userProfile.uid}
+          isOpen={showNotifications}
+          onClose={handleCloseNotifications}
+        />
+      )}
+
+      {/* View Feedback Modal for Admin */}
+      {userProfile.role === 'admin' && (
+        <ViewFeedbackModal
+          feedback={viewFeedback}
+          isOpen={!!viewFeedback}
+          onClose={handleCloseViewFeedback}
+        />
+      )}
     </div>
   );
 }

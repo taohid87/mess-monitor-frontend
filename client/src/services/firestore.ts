@@ -14,7 +14,7 @@ import {
   serverTimestamp 
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { User, FundTransaction, Config, Fine } from "@/types";
+import { User, FundTransaction, Config, Fine, Notification, Announcement, Feedback } from "@/types";
 
 // User operations
 export const getUserByUid = async (uid: string): Promise<User | null> => {
@@ -27,10 +27,26 @@ export const getUserByUid = async (uid: string): Promise<User | null> => {
   }
 };
 
-export const createUserProfile = async (userData: Omit<User, 'id'>): Promise<User> => {
+export const createUserProfile = async (userData: Partial<User> & { uid: string }): Promise<User> => {
   try {
-    await setDoc(doc(db, 'users', userData.uid), userData);
-    return userData as User;
+    const userProfile = {
+      uid: userData.uid,
+      name: userData.name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      role: userData.role || 'border',
+      department: userData.department,
+      duty: userData.duty,
+      owesTo: userData.owesTo,
+      getsFrom: userData.getsFrom,
+      monthlyContribution: userData.monthlyContribution,
+      lastPayment: userData.lastPayment,
+      joinDate: userData.joinDate,
+      fines: userData.fines || []
+    };
+    
+    await setDoc(doc(db, 'users', userData.uid), userProfile);
+    return userProfile as User;
   } catch (error) {
     console.error('Error creating user profile:', error);
     throw error;
@@ -131,5 +147,168 @@ export const listenToBorders = (callback: (borders: User[]) => void) => {
   return onSnapshot(q, (querySnapshot) => {
     const borders = querySnapshot.docs.map(doc => doc.data() as User);
     callback(borders);
+  });
+};
+
+// Announcement operations
+export const getAnnouncements = async (): Promise<Announcement[]> => {
+  try {
+    const q = query(collection(db, 'announcements'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Announcement));
+  } catch (error) {
+    console.error('Error getting announcements:', error);
+    throw error;
+  }
+};
+
+export const addAnnouncement = async (announcement: Omit<Announcement, 'id' | 'timestamp'>): Promise<string> => {
+  try {
+    const docRef = await addDoc(collection(db, 'announcements'), {
+      ...announcement,
+      timestamp: serverTimestamp()
+    });
+    
+    // Create notifications for all borders
+    const borders = await getBorders();
+    const notifications = borders.map(border => ({
+      title: 'New Announcement',
+      message: announcement.title,
+      type: 'announcement' as const,
+      createdAt: new Date().toISOString().split('T')[0],
+      createdBy: announcement.createdBy,
+      isRead: false,
+      borderUid: border.uid
+    }));
+    
+    // Add notifications
+    await Promise.all(notifications.map(notification => 
+      addDoc(collection(db, 'notifications'), {
+        ...notification,
+        timestamp: serverTimestamp()
+      })
+    ));
+    
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding announcement:', error);
+    throw error;
+  }
+};
+
+export const deleteAnnouncement = async (id: string): Promise<void> => {
+  try {
+    await deleteDoc(doc(db, 'announcements', id));
+  } catch (error) {
+    console.error('Error deleting announcement:', error);
+    throw error;
+  }
+};
+
+// Notification operations
+export const getNotificationsByUser = async (borderUid: string): Promise<Notification[]> => {
+  try {
+    const q = query(
+      collection(db, 'notifications'), 
+      where('borderUid', '==', borderUid),
+      orderBy('timestamp', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Notification));
+  } catch (error) {
+    console.error('Error getting notifications:', error);
+    throw error;
+  }
+};
+
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    await updateDoc(doc(db, 'notifications', notificationId), {
+      isRead: true
+    });
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    throw error;
+  }
+};
+
+// Feedback operations
+export const getFeedbacks = async (): Promise<Feedback[]> => {
+  try {
+    const q = query(collection(db, 'feedbacks'), orderBy('timestamp', 'desc'));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Feedback));
+  } catch (error) {
+    console.error('Error getting feedbacks:', error);
+    throw error;
+  }
+};
+
+export const addFeedback = async (feedback: Omit<Feedback, 'id' | 'timestamp'>): Promise<string> => {
+  try {
+    const docRef = await addDoc(collection(db, 'feedbacks'), {
+      ...feedback,
+      timestamp: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding feedback:', error);
+    throw error;
+  }
+};
+
+export const updateFeedback = async (id: string, updates: Partial<Feedback>): Promise<void> => {
+  try {
+    await updateDoc(doc(db, 'feedbacks', id), updates);
+  } catch (error) {
+    console.error('Error updating feedback:', error);
+    throw error;
+  }
+};
+
+// Real-time listeners for new features
+export const listenToAnnouncements = (callback: (announcements: Announcement[]) => void) => {
+  const q = query(collection(db, 'announcements'), orderBy('timestamp', 'desc'));
+  return onSnapshot(q, (querySnapshot) => {
+    const announcements = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Announcement));
+    callback(announcements);
+  });
+};
+
+export const listenToNotifications = (borderUid: string, callback: (notifications: Notification[]) => void) => {
+  const q = query(
+    collection(db, 'notifications'), 
+    where('borderUid', '==', borderUid),
+    orderBy('timestamp', 'desc')
+  );
+  return onSnapshot(q, (querySnapshot) => {
+    const notifications = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Notification));
+    callback(notifications);
+  });
+};
+
+export const listenToFeedbacks = (callback: (feedbacks: Feedback[]) => void) => {
+  const q = query(collection(db, 'feedbacks'), orderBy('timestamp', 'desc'));
+  return onSnapshot(q, (querySnapshot) => {
+    const feedbacks = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Feedback));
+    callback(feedbacks);
   });
 };
