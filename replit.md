@@ -125,7 +125,9 @@ Preferred communication style: Simple, everyday language.
 
 ### Issues Fixed
 - ✓ Fixed registration error by updating user profile creation to handle partial data
-- ✓ Enabled borders to edit their own profiles (previously admin-only)
+- ✓ Restricted profile editing to admin-only (borders cannot edit their profiles)
+- ✓ Fixed layout overflow issues in announcements and reports sections with responsive design
+- ✓ Enhanced error handling for notifications to prevent crashes
 
 ### New Features Added
 1. **Statistics Dashboard**: Enhanced admin dashboard with comprehensive statistics
