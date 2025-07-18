@@ -94,7 +94,7 @@ export const FeedbacksTab = ({ onViewFeedback }: FeedbacksTabProps) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-full overflow-hidden">
       <div className="flex justify-between items-center mb-6">
         <h3 className="font-inter font-semibold text-xl text-gray-900">Feedback Management</h3>
       </div>
@@ -148,13 +148,13 @@ export const FeedbacksTab = ({ onViewFeedback }: FeedbacksTabProps) => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Border</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Rating</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="min-w-[120px]">Border</TableHead>
+                    <TableHead className="min-w-[150px]">Subject</TableHead>
+                    <TableHead className="min-w-[100px]">Category</TableHead>
+                    <TableHead className="min-w-[120px]">Rating</TableHead>
+                    <TableHead className="min-w-[100px]">Status</TableHead>
+                    <TableHead className="min-w-[100px]">Date</TableHead>
+                    <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

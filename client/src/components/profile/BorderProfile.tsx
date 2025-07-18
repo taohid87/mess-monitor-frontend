@@ -21,7 +21,7 @@ export const BorderProfile = ({ border, currentUser, onPrint }: BorderProfilePro
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const canEdit = currentUser.role === 'admin' || currentUser.uid === border.uid;
+  const canEdit = currentUser.role === 'admin';
 
   const handleSave = async () => {
     setLoading(true);

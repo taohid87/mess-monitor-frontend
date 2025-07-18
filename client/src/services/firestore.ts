@@ -29,24 +29,30 @@ export const getUserByUid = async (uid: string): Promise<User | null> => {
 
 export const createUserProfile = async (userData: Partial<User> & { uid: string }): Promise<User> => {
   try {
-    const userProfile: User = {
+    const userProfile = {
       uid: userData.uid,
       name: userData.name || '',
       email: userData.email || '',
       phone: userData.phone || '',
       role: userData.role || 'border',
-      department: userData.department || (userData.role === 'border' ? 'Not specified' : undefined),
-      duty: userData.duty || (userData.role === 'border' ? 'Not assigned' : undefined),
-      owesTo: userData.owesTo || (userData.role === 'border' ? [] : undefined),
-      getsFrom: userData.getsFrom || (userData.role === 'border' ? [] : undefined),
-      monthlyContribution: userData.monthlyContribution || (userData.role === 'border' ? 0 : undefined),
-      lastPayment: userData.lastPayment || (userData.role === 'border' ? null : undefined),
-      joinDate: userData.joinDate || new Date().toISOString().split('T')[0],
-      fines: userData.fines || []
+      joinDate: new Date().toISOString().split('T')[0],
+      fines: []
     };
+
+    // Add border-specific fields only for borders
+    if (userData.role === 'border') {
+      Object.assign(userProfile, {
+        department: userData.department || 'Not specified',
+        duty: userData.duty || 'Not assigned',
+        owesTo: userData.owesTo || [],
+        getsFrom: userData.getsFrom || [],
+        monthlyContribution: userData.monthlyContribution || 0,
+        lastPayment: userData.lastPayment || null
+      });
+    }
     
     await setDoc(doc(db, 'users', userData.uid), userProfile);
-    return userProfile;
+    return userProfile as User;
   } catch (error) {
     console.error('Error creating user profile:', error);
     throw error;

@@ -108,7 +108,7 @@ export const AdminDashboard = ({
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 overflow-hidden">
       {/* Dashboard Header */}
       <Card>
         <CardContent className="p-6">
@@ -138,10 +138,10 @@ export const AdminDashboard = ({
       <StatsCards stats={stats} />
 
       {/* Action Tabs */}
-      <Card>
+      <Card className="overflow-hidden">
         <Tabs defaultValue="borders" className="w-full">
-          <div className="border-b border-gray-200 px-6">
-            <TabsList className="h-auto p-0 bg-transparent">
+          <div className="border-b border-gray-200 px-6 overflow-x-auto">
+            <TabsList className="h-auto p-0 bg-transparent flex-nowrap">
               <TabsTrigger 
                 value="borders" 
                 className="border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary rounded-none px-6 py-4"

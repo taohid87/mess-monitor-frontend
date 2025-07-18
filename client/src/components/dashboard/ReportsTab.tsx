@@ -20,15 +20,15 @@ export const ReportsTab = ({ stats }: ReportsTabProps) => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h3 className="font-inter font-semibold text-xl text-gray-900">Reports & Analytics</h3>
-        <div className="flex space-x-3">
-          <Button onClick={handleExportPDF} className="bg-primary hover:bg-blue-700">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          <Button onClick={handleExportPDF} className="bg-primary hover:bg-blue-700 w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             Export PDF
           </Button>
-          <Button onClick={handleExportExcel} className="bg-secondary hover:bg-green-700">
+          <Button onClick={handleExportExcel} className="bg-secondary hover:bg-green-700 w-full sm:w-auto">
             <FileText className="mr-2 h-4 w-4" />
             Export Excel
           </Button>

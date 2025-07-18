@@ -72,10 +72,10 @@ export const AnnouncementsTab = ({ onAddAnnouncement, onEditAnnouncement }: Anno
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 max-w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h3 className="font-inter font-semibold text-xl text-gray-900">Announcements Management</h3>
-        <Button onClick={onAddAnnouncement} className="bg-secondary hover:bg-green-700">
+        <Button onClick={onAddAnnouncement} className="bg-secondary hover:bg-green-700 whitespace-nowrap">
           <Plus className="mr-2 h-4 w-4" />
           Create Announcement
         </Button>
@@ -106,12 +106,12 @@ export const AnnouncementsTab = ({ onAddAnnouncement, onEditAnnouncement }: Anno
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Priority</TableHead>
-                    <TableHead>Created By</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Content Preview</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="min-w-[150px]">Title</TableHead>
+                    <TableHead className="min-w-[100px]">Priority</TableHead>
+                    <TableHead className="min-w-[120px]">Created By</TableHead>
+                    <TableHead className="min-w-[100px]">Date</TableHead>
+                    <TableHead className="min-w-[200px]">Content Preview</TableHead>
+                    <TableHead className="min-w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
