@@ -29,24 +29,24 @@ export const getUserByUid = async (uid: string): Promise<User | null> => {
 
 export const createUserProfile = async (userData: Partial<User> & { uid: string }): Promise<User> => {
   try {
-    const userProfile = {
+    const userProfile: User = {
       uid: userData.uid,
       name: userData.name || '',
       email: userData.email || '',
       phone: userData.phone || '',
       role: userData.role || 'border',
-      department: userData.department,
-      duty: userData.duty,
-      owesTo: userData.owesTo,
-      getsFrom: userData.getsFrom,
-      monthlyContribution: userData.monthlyContribution,
-      lastPayment: userData.lastPayment,
-      joinDate: userData.joinDate,
+      department: userData.department || (userData.role === 'border' ? 'Not specified' : undefined),
+      duty: userData.duty || (userData.role === 'border' ? 'Not assigned' : undefined),
+      owesTo: userData.owesTo || (userData.role === 'border' ? [] : undefined),
+      getsFrom: userData.getsFrom || (userData.role === 'border' ? [] : undefined),
+      monthlyContribution: userData.monthlyContribution || (userData.role === 'border' ? 0 : undefined),
+      lastPayment: userData.lastPayment || (userData.role === 'border' ? null : undefined),
+      joinDate: userData.joinDate || new Date().toISOString().split('T')[0],
       fines: userData.fines || []
     };
     
     await setDoc(doc(db, 'users', userData.uid), userProfile);
-    return userProfile as User;
+    return userProfile;
   } catch (error) {
     console.error('Error creating user profile:', error);
     throw error;
@@ -167,30 +167,41 @@ export const getAnnouncements = async (): Promise<Announcement[]> => {
 
 export const addAnnouncement = async (announcement: Omit<Announcement, 'id' | 'timestamp'>): Promise<string> => {
   try {
+    if (!announcement.title || !announcement.content || !announcement.createdBy) {
+      throw new Error('Missing required fields for announcement');
+    }
+    
     const docRef = await addDoc(collection(db, 'announcements'), {
       ...announcement,
       timestamp: serverTimestamp()
     });
     
     // Create notifications for all borders
-    const borders = await getBorders();
-    const notifications = borders.map(border => ({
-      title: 'New Announcement',
-      message: announcement.title,
-      type: 'announcement' as const,
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: announcement.createdBy,
-      isRead: false,
-      borderUid: border.uid
-    }));
-    
-    // Add notifications
-    await Promise.all(notifications.map(notification => 
-      addDoc(collection(db, 'notifications'), {
-        ...notification,
-        timestamp: serverTimestamp()
-      })
-    ));
+    try {
+      const borders = await getBorders();
+      if (borders.length > 0) {
+        const notifications = borders.map(border => ({
+          title: 'New Announcement',
+          message: announcement.title,
+          type: 'announcement' as const,
+          createdAt: new Date().toISOString().split('T')[0],
+          createdBy: announcement.createdBy,
+          isRead: false,
+          borderUid: border.uid
+        }));
+        
+        // Add notifications with error handling for each
+        await Promise.allSettled(notifications.map(notification => 
+          addDoc(collection(db, 'notifications'), {
+            ...notification,
+            timestamp: serverTimestamp()
+          })
+        ));
+      }
+    } catch (notificationError) {
+      console.error('Error creating notifications for announcement:', notificationError);
+      // Don't throw here - announcement was created successfully
+    }
     
     return docRef.id;
   } catch (error) {
@@ -211,6 +222,11 @@ export const deleteAnnouncement = async (id: string): Promise<void> => {
 // Notification operations
 export const getNotificationsByUser = async (borderUid: string): Promise<Notification[]> => {
   try {
+    if (!borderUid) {
+      console.warn('No borderUid provided for notifications');
+      return [];
+    }
+    
     const q = query(
       collection(db, 'notifications'), 
       where('borderUid', '==', borderUid),
@@ -223,7 +239,7 @@ export const getNotificationsByUser = async (borderUid: string): Promise<Notific
     } as Notification));
   } catch (error) {
     console.error('Error getting notifications:', error);
-    throw error;
+    return []; // Return empty array instead of throwing to prevent UI crashes
   }
 };
 
@@ -255,6 +271,14 @@ export const getFeedbacks = async (): Promise<Feedback[]> => {
 
 export const addFeedback = async (feedback: Omit<Feedback, 'id' | 'timestamp'>): Promise<string> => {
   try {
+    if (!feedback.message || !feedback.submittedBy || feedback.rating === undefined) {
+      throw new Error('Missing required fields for feedback');
+    }
+    
+    if (feedback.rating < 1 || feedback.rating > 5) {
+      throw new Error('Rating must be between 1 and 5');
+    }
+    
     const docRef = await addDoc(collection(db, 'feedbacks'), {
       ...feedback,
       timestamp: serverTimestamp()
@@ -288,17 +312,32 @@ export const listenToAnnouncements = (callback: (announcements: Announcement[]) 
 };
 
 export const listenToNotifications = (borderUid: string, callback: (notifications: Notification[]) => void) => {
+  if (!borderUid) {
+    console.warn('No borderUid provided for notification listener');
+    callback([]);
+    return () => {}; // Return empty unsubscribe function
+  }
+  
   const q = query(
     collection(db, 'notifications'), 
     where('borderUid', '==', borderUid),
     orderBy('timestamp', 'desc')
   );
+  
   return onSnapshot(q, (querySnapshot) => {
-    const notifications = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Notification));
-    callback(notifications);
+    try {
+      const notifications = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Notification));
+      callback(notifications);
+    } catch (error) {
+      console.error('Error processing notifications:', error);
+      callback([]); // Provide fallback empty array
+    }
+  }, (error) => {
+    console.error('Error in notifications listener:', error);
+    callback([]); // Provide fallback on error
   });
 };
 

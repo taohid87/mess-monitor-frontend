@@ -42,11 +42,7 @@ export const register = async (data: RegisterData) => {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      role: data.role,
-      department: data.role === 'border' ? 'Not specified' : undefined,
-      duty: data.role === 'border' ? 'Not assigned' : undefined,
-      joinDate: new Date().toISOString().split('T')[0],
-      fines: []
+      role: data.role
     });
 
     return { user: userCredential.user, profile: userProfile };
